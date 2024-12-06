@@ -1,0 +1,35 @@
+import pdfplumber
+import camelot
+
+def extract_text_and_tables(pdf_path, output_text_file):
+    # Open the PDF
+    with pdfplumber.open(pdf_path) as pdf:
+        with open(output_text_file, 'w', encoding='utf-8') as output_file:
+            # Process each page
+            for page_number, page in enumerate(pdf.pages, start=1):
+                output_file.write(f"\n--- Page {page_number} ---\n")
+                
+                # Extract text
+                text = page.extract_text()
+                output_file.write("\nText Content:\n")
+                output_file.write(text if text else "[No text content]\n")
+
+                # Detect tables
+                tables = camelot.read_pdf(pdf_path, pages=str(page_number), flavor='stream')
+
+                if tables:
+                    output_file.write("\nDetected Tables:\n")
+                    for i, table in enumerate(tables):
+                        output_file.write(f"\nTable {i + 1}:\n")
+                        output_file.write(table.df.to_string(index=False))
+                else:
+                    output_file.write("\nNo tables detected on this page.\n")
+
+# Input PDF path and output text file path
+pdf_path = 'financial_factsheet.pdf'
+output_text_file = 'extracted_data.txt'
+
+# Call the function
+extract_text_and_tables(pdf_path, output_text_file)
+
+print("Data extraction completed. Check 'extracted_data.txt'.")
